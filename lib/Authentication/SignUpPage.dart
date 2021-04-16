@@ -50,15 +50,15 @@ class _SignUpPage extends State<SignUpPage> {
     );
   }
 
-    Widget signUpButton() {
+  Widget signUpButton() {
     return Container(
       padding: EdgeInsets.only(left: 22),
-      child: TextButton(
+      child: ElevatedButton(
         onPressed: null,
         child: Text("Sign up", style: TextStyle(color: Colors.black)),
         style: ButtonStyle(
             backgroundColor: MaterialStateProperty.all<Color>(Colors.blue),
-            fixedSize: MaterialStateProperty.all<Size>(Size(335, 50))),
+            minimumSize: MaterialStateProperty.all<Size>(Size(335, 50))),
       ),
     );
   }
@@ -163,13 +163,13 @@ class _SignUpPage extends State<SignUpPage> {
   Widget signInButton(BuildContext context) {
     return Container(
       padding: EdgeInsets.only(top: 50, bottom: 5),
-      child: TextButton(
+      child: ElevatedButton(
         onPressed: () => Navigator.pop(
             context, MaterialPageRoute(builder: (context) => SignUpPage())),
         child: Text("Sign in", style: TextStyle(color: Colors.black)),
         style: ButtonStyle(
           backgroundColor: MaterialStateProperty.all<Color>(Colors.blue),
-          fixedSize: MaterialStateProperty.all<Size>(Size(300, 50)),
+          minimumSize: MaterialStateProperty.all<Size>(Size(300, 50)),
         ),
       ),
     );
@@ -191,9 +191,12 @@ class _SignUpPage extends State<SignUpPage> {
               children: <Widget>[
                 topText(),
                 signUpRow(Icon(Icons.email), "Email", false, emailController),
-                signUpRow(Icon(Icons.account_circle_outlined), "Username", false, usernameController),
-                signUpRow(Icon(Icons.vpn_key), "Password", true, passwordController),
-                signUpRow(Icon(Icons.vpn_lock), "Password Confirmation", true, passwordConfirmationController),
+                signUpRow(Icon(Icons.account_circle_outlined), "Username",
+                    false, usernameController),
+                signUpRow(
+                    Icon(Icons.vpn_key), "Password", true, passwordController),
+                signUpRow(Icon(Icons.vpn_lock), "Password Confirmation", true,
+                    passwordConfirmationController),
                 signUpButton(),
                 orContainer(50),
                 seperateServicesSignInColumn(),

@@ -30,6 +30,8 @@ class _SignInPage extends State<SignInPage> {
   Widget signInRow(Icon icon, String inputText, bool secureText,
       TextEditingController controller) {
     return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: <Widget>[
         Container(
           padding: EdgeInsets.all(8.0),
@@ -64,12 +66,12 @@ class _SignInPage extends State<SignInPage> {
         child: Text("Sign in", style: TextStyle(color: Colors.black)),
         style: ButtonStyle(
             backgroundColor: MaterialStateProperty.all<Color>(Colors.blue),
-            fixedSize: MaterialStateProperty.all<Size>(Size(335, 50))),
+            minimumSize: MaterialStateProperty.all<Size>(Size(335, 50))),
       ),
     );
   }
 
-  void signIn() async {
+  Future signIn() async {
     try {
       UserCredential userCredential = await FirebaseAuth.instance
           .signInWithEmailAndPassword(
@@ -81,8 +83,7 @@ class _SignInPage extends State<SignInPage> {
         usernameController.text = "No Email Found:";
         passwordController.clear();
       } else if (e.code == 'wrong-password') {
-        print("bad password");
-        passwordController.text = "Incorrect Password";
+        passwordController.clear();
       }
     } catch (e) {}
   }
@@ -90,22 +91,21 @@ class _SignInPage extends State<SignInPage> {
   Widget signUpButton(BuildContext context) {
     return Container(
       padding: EdgeInsets.only(top: 50, bottom: 5),
-      child: TextButton(
+      child: ElevatedButton(
         onPressed: () => Navigator.push(
             context, MaterialPageRoute(builder: (context) => SignUpPage())),
         child: Text("Sign up", style: TextStyle(color: Colors.black)),
         style: ButtonStyle(
           backgroundColor: MaterialStateProperty.all<Color>(Colors.blue),
-          fixedSize: MaterialStateProperty.all<Size>(Size(300, 50)),
+          minimumSize: MaterialStateProperty.all<Size>(Size(300, 50)),
         ),
       ),
     );
   }
 
   Widget seperateServicesSignInColumn() {
-    //bool isApple = isAppleDevice();
+    bool isApple = isAppleDevice();
     double height = 55;
-    bool isApple = true;
     if (isApple) {
       return Column(
         children: <Widget>[
@@ -208,9 +208,11 @@ class _SignInPage extends State<SignInPage> {
         ),
         alignment: Alignment.center,
         child: ListView(
-          children: <Widget>[
+          shrinkWrap: true,
+          scrollDirection: Axis.horizontal,
+          children: [
             Column(
-              mainAxisAlignment: MainAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: <Widget>[
                 topText(),
@@ -226,7 +228,8 @@ class _SignInPage extends State<SignInPage> {
               ],
             ),
           ],
-        ),
+        )
+          
       ),
     );
   }

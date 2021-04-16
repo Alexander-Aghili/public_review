@@ -4,6 +4,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import "Authentication/AuthPage.dart";
 
+//Main Issues:
+//-Listview for sign in page is awkward, possible fix(Put scrollorientation as horizontal)
+//-Screen can have landscape mode, prevent it.
+//-Custom Auth
+//-Google Auth
+//-Facebook Auth
+//-Twitter Auth
+//-Apple Auth
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   //Not implemented for iOS use yet, implement at a later date
