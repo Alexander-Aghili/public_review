@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "541449706517",
+    "project_id": "congress-app-ac787",
+    "storage_bucket": "congress-app-ac787.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:541449706517:android:89e7cc5ae3283b4406421c",
+        "android_client_info": {
+          "package_name": "com.politics.congress_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "541449706517-3ksa8esbmn66sqeasfk3sfa60lp1binj.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.politics.congress_app",
+            "certificate_hash": "f8444f65d4f92181bd7a534398db8739afbf5527"
+          }
+        },
+        {
+          "client_id": "541449706517-heohvt3ob61d3c137pheruqbvbd5dr23.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA38URhVEcgeXzk-VROpmRJ0t-_TGJ7PKk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "541449706517-heohvt3ob61d3c137pheruqbvbd5dr23.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "541449706517-110qjdak1vho64pfnnu5dirk1l3i1m11.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.politics.congressapp"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
