@@ -10,7 +10,17 @@ class AuthPage extends StatefulWidget {
 class _AuthPage extends State<AuthPage> {
   FirebaseAuth auth = FirebaseAuth.instance;
 
+  authChecks() {
+    User? user = auth.currentUser;
+
+    if (user != null && !user.emailVerified) {
+      user.sendEmailVerification();
+    }
+  }
+
   Widget pageForUserState() {
+    authChecks();
+
     if (auth.currentUser != null) {
       return Scaffold();
     } else {

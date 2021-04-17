@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class SignUpPage extends StatefulWidget {
@@ -6,10 +8,57 @@ class SignUpPage extends StatefulWidget {
 }
 
 class _SignUpPage extends State<SignUpPage> {
-  final emailController = TextEditingController();
-  final usernameController = TextEditingController();
-  final passwordController = TextEditingController();
-  final passwordConfirmationController = TextEditingController();
+  final GlobalKey<FormState> _registerFormKey = GlobalKey<FormState>();
+  late TextEditingController emailController;
+  late TextEditingController usernameController;
+  late TextEditingController passwordController;
+  late TextEditingController passwordConfirmationController;
+
+  String errorMessage = "";
+
+  @override
+  initState() {
+    emailController = new TextEditingController();
+    usernameController = new TextEditingController();
+    passwordController = new TextEditingController();
+    passwordConfirmationController = new TextEditingController();
+
+    super.initState();
+  }
+
+  //Check if email is valid
+  String? emailValidator(String value) {
+    String pattern =
+        r'^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$';
+    RegExp regex = new RegExp(pattern);
+    if (!regex.hasMatch(value)) {
+      return "Email is not valid";
+    } else {
+      return null;
+    }
+  }
+
+  //Check if username is already in database
+  String? usernameValidator(String value) {
+    return null;
+  }
+
+  //Check if password fits requirements
+  String? passwordValidator(String value) {
+    return null;
+  }
+
+  bool isAppleDevice() {
+    return Theme.of(context).platform == TargetPlatform.iOS;
+  }
+
+  void dispose() {
+    emailController.dispose();
+    usernameController.dispose();
+    passwordController.dispose();
+    passwordConfirmationController.dispose();
+    super.dispose();
+  }
 
   Widget topText() {
     return Text(
@@ -22,7 +71,7 @@ class _SignUpPage extends State<SignUpPage> {
   }
 
   Widget signUpRow(Icon icon, String inputText, bool secureText,
-      TextEditingController controller) {
+      TextEditingController controller, String? validator) {
     return Row(
       children: <Widget>[
         Container(
@@ -37,13 +86,14 @@ class _SignUpPage extends State<SignUpPage> {
           height: 75,
           width: 350,
           alignment: Alignment.center,
-          child: TextField(
+          child: TextFormField(
             obscureText: secureText,
             controller: controller,
             decoration: InputDecoration(
               border: OutlineInputBorder(),
               labelText: inputText,
             ),
+            validator: (value) => validator,
           ),
         ),
       ],
@@ -54,7 +104,7 @@ class _SignUpPage extends State<SignUpPage> {
     return Container(
       padding: EdgeInsets.only(left: 22),
       child: ElevatedButton(
-        onPressed: null,
+        onPressed: () => signUp(),
         child: Text("Sign up", style: TextStyle(color: Colors.black)),
         style: ButtonStyle(
             backgroundColor: MaterialStateProperty.all<Color>(Colors.blue),
@@ -63,10 +113,36 @@ class _SignUpPage extends State<SignUpPage> {
     );
   }
 
+  Future signUp() async {
+    if (passwordConfirmationController.text.toString() !=
+        passwordController.text.toString()) {
+      //Implement incorrect password match
+      errorMessage = "Passwords do not match";
+      return;
+    }
+
+    try {
+      UserCredential userCredential =
+          await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: emailController.text,
+        password: passwordController.text,
+      ); //Implement then and firestore research
+    } on FirebaseAuthException catch (e) {
+      //During submission, might want to adjust to change validators if possible
+      if (e.code == 'weak-password') {
+        errorMessage = "The password provided is too weak";
+      } else if (e.code == 'email-already-in-use') {
+        errorMessage = "The account already exists for that email";
+      }
+    } catch (e) {
+      print(e);
+    }
+  }
+
   Widget seperateServicesSignInColumn() {
-    //bool isApple = isAppleDevice();
+    bool isApple = isAppleDevice();
     double height = 60;
-    bool isApple = true;
+
     if (isApple) {
       return Column(
         children: <Widget>[
@@ -96,17 +172,17 @@ class _SignUpPage extends State<SignUpPage> {
       return Column(
         children: <Widget>[
           SizedBox(
-            height: 75,
+            height: height,
             child: signInWithSeperateServiceButton(
                 AssetImage("assets/images/google_signin_button.png")),
           ),
           SizedBox(
-            height: 75,
+            height: height,
             child: signInWithSeperateServiceButton(
                 AssetImage("assets/images/facebook_signin_button.png")),
           ),
           SizedBox(
-            height: 75,
+            height: height,
             child: signInWithSeperateServiceButton(
                 AssetImage("assets/images/twitter_signin_button.png")),
           ),
@@ -184,19 +260,35 @@ class _SignUpPage extends State<SignUpPage> {
         ),
         alignment: Alignment.center,
         child: ListView(
+          shrinkWrap: true,
+          physics: const ScrollPhysics(),
           children: <Widget>[
             Column(
               mainAxisAlignment: MainAxisAlignment.start,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: <Widget>[
                 topText(),
-                signUpRow(Icon(Icons.email), "Email", false, emailController),
-                signUpRow(Icon(Icons.account_circle_outlined), "Username",
-                    false, usernameController),
+                signUpRow(Icon(Icons.email), "Email", false, emailController,
+                    emailValidator(emailController.text.toString())),
                 signUpRow(
-                    Icon(Icons.vpn_key), "Password", true, passwordController),
-                signUpRow(Icon(Icons.vpn_lock), "Password Confirmation", true,
-                    passwordConfirmationController),
+                    Icon(Icons.account_circle_outlined),
+                    "Username",
+                    false,
+                    usernameController,
+                    usernameValidator(usernameController.text.toString())),
+                signUpRow(
+                    Icon(Icons.vpn_key),
+                    "Password",
+                    true,
+                    passwordController,
+                    passwordValidator(passwordController.text.toString())),
+                signUpRow(
+                    Icon(Icons.vpn_lock),
+                    "Password Confirmation",
+                    true,
+                    passwordConfirmationController,
+                    passwordValidator(
+                        passwordConfirmationController.text.toString())),
                 signUpButton(),
                 orContainer(50),
                 seperateServicesSignInColumn(),

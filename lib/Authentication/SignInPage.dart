@@ -83,6 +83,7 @@ class _SignInPage extends State<SignInPage> {
         usernameController.text = "No Email Found:";
         passwordController.clear();
       } else if (e.code == 'wrong-password') {
+        print("Bad Password: " + passwordController.text);
         passwordController.clear();
       }
     } catch (e) {}
@@ -105,7 +106,7 @@ class _SignInPage extends State<SignInPage> {
 
   Widget seperateServicesSignInColumn() {
     bool isApple = isAppleDevice();
-    double height = 55;
+    double height = 60;
     if (isApple) {
       return Column(
         children: <Widget>[
@@ -135,17 +136,17 @@ class _SignInPage extends State<SignInPage> {
       return Column(
         children: <Widget>[
           SizedBox(
-            height: 75,
+            height: height,
             child: signInWithSeperateServiceButton(
                 AssetImage("assets/images/google_signin_button.png")),
           ),
           SizedBox(
-            height: 75,
+            height: height,
             child: signInWithSeperateServiceButton(
                 AssetImage("assets/images/facebook_signin_button.png")),
           ),
           SizedBox(
-            height: 75,
+            height: height,
             child: signInWithSeperateServiceButton(
                 AssetImage("assets/images/twitter_signin_button.png")),
           ),
@@ -208,8 +209,8 @@ class _SignInPage extends State<SignInPage> {
         ),
         alignment: Alignment.center,
         child: ListView(
+          physics: const ScrollPhysics(),
           shrinkWrap: true,
-          scrollDirection: Axis.horizontal,
           children: [
             Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -218,8 +219,8 @@ class _SignInPage extends State<SignInPage> {
                 topText(),
                 signInRow(Icon(Icons.account_circle), "Username/Email", false,
                     usernameController),
-                signInRow(
-                    Icon(Icons.vpn_key), "Password", true, passwordController),
+                signInRow(Icon(Icons.vpn_key), "Password", true,
+                    passwordController),
                 signInButton(),
                 orContainer(50),
                 seperateServicesSignInColumn(),
@@ -229,7 +230,6 @@ class _SignInPage extends State<SignInPage> {
             ),
           ],
         )
-          
       ),
     );
   }

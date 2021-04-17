@@ -5,8 +5,11 @@ import 'package:flutter/widgets.dart';
 import "Authentication/AuthPage.dart";
 
 //Main Issues:
-//-Listview for sign in page is awkward, possible fix(Put scrollorientation as horizontal)
-//-Screen can have landscape mode, prevent it.
+//Sign up and Sign in TextFieldForm issues, no validators or any proofs any info is getting through.
+//Implementing user storage, add another section that expands upon base info, including:
+//First Name, Last Name, Display Name, Profile Picture, Political Party, ask for Location Service
+
+//To Do:
 //-Custom Auth
 //-Google Auth
 //-Facebook Auth
