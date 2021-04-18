@@ -5,7 +5,7 @@ import 'package:flutter/widgets.dart';
 import "Authentication/AuthPage.dart";
 
 //Main Issues:
-//Sign up and Sign in TextFieldForm issues, no validators or any proofs any info is getting through.
+//Figure out how to effectivly use the passwords in the form validator.
 //Implementing user storage, add another section that expands upon base info, including:
 //First Name, Last Name, Display Name, Profile Picture, Political Party, ask for Location Service
 

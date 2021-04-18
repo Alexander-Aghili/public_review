@@ -8,6 +8,8 @@ class SignUpPage extends StatefulWidget {
 }
 
 class _SignUpPage extends State<SignUpPage> {
+  late _SignUpInfo signUpInfo;
+
   final GlobalKey<FormState> _registerFormKey = GlobalKey<FormState>();
   late TextEditingController emailController;
   late TextEditingController usernameController;
@@ -15,6 +17,7 @@ class _SignUpPage extends State<SignUpPage> {
   late TextEditingController passwordConfirmationController;
 
   String errorMessage = "";
+  String usernameErrorMessage = "";
 
   @override
   initState() {
@@ -23,29 +26,14 @@ class _SignUpPage extends State<SignUpPage> {
     passwordController = new TextEditingController();
     passwordConfirmationController = new TextEditingController();
 
+    signUpInfo = new _SignUpInfo(
+      registerFormKey: _registerFormKey,
+      usernameController: usernameController,
+      passwordConfirmationController: passwordConfirmationController,
+      passwordController: passwordController,
+      errorMessage: errorMessage,
+      usernameErrorMessage: usernameErrorMessage);
     super.initState();
-  }
-
-  //Check if email is valid
-  String? emailValidator(String value) {
-    String pattern =
-        r'^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$';
-    RegExp regex = new RegExp(pattern);
-    if (!regex.hasMatch(value)) {
-      return "Email is not valid";
-    } else {
-      return null;
-    }
-  }
-
-  //Check if username is already in database
-  String? usernameValidator(String value) {
-    return null;
-  }
-
-  //Check if password fits requirements
-  String? passwordValidator(String value) {
-    return null;
   }
 
   bool isAppleDevice() {
@@ -70,8 +58,26 @@ class _SignUpPage extends State<SignUpPage> {
     );
   }
 
+  Widget signUpForm() {
+    return Form(
+      key: _registerFormKey,
+      child: Column(
+        children: [
+          signUpRow(Icon(Icons.email), "Email", false, emailController,
+              signUpInfo.emailValidator),
+          signUpRow(Icon(Icons.account_circle_outlined), "Username", false,
+              usernameController, signUpInfo.usernameValidator),
+          signUpRow(Icon(Icons.vpn_key), "Password", true, passwordController,
+              signUpInfo.passwordValidator),
+          signUpRow(Icon(Icons.vpn_lock), "Password Confirmation", true,
+              passwordConfirmationController, signUpInfo.passwordValidator),
+        ],
+      ),
+    );
+  }
+
   Widget signUpRow(Icon icon, String inputText, bool secureText,
-      TextEditingController controller, String? validator) {
+      TextEditingController controller, Function validator) {
     return Row(
       children: <Widget>[
         Container(
@@ -93,7 +99,7 @@ class _SignUpPage extends State<SignUpPage> {
               border: OutlineInputBorder(),
               labelText: inputText,
             ),
-            validator: (value) => validator,
+            validator: (value) => validator(value),
           ),
         ),
       ],
@@ -104,39 +110,13 @@ class _SignUpPage extends State<SignUpPage> {
     return Container(
       padding: EdgeInsets.only(left: 22),
       child: ElevatedButton(
-        onPressed: () => signUp(),
+        onPressed: () => signUpInfo,
         child: Text("Sign up", style: TextStyle(color: Colors.black)),
         style: ButtonStyle(
             backgroundColor: MaterialStateProperty.all<Color>(Colors.blue),
             minimumSize: MaterialStateProperty.all<Size>(Size(335, 50))),
       ),
     );
-  }
-
-  Future signUp() async {
-    if (passwordConfirmationController.text.toString() !=
-        passwordController.text.toString()) {
-      //Implement incorrect password match
-      errorMessage = "Passwords do not match";
-      return;
-    }
-
-    try {
-      UserCredential userCredential =
-          await FirebaseAuth.instance.createUserWithEmailAndPassword(
-        email: emailController.text,
-        password: passwordController.text,
-      ); //Implement then and firestore research
-    } on FirebaseAuthException catch (e) {
-      //During submission, might want to adjust to change validators if possible
-      if (e.code == 'weak-password') {
-        errorMessage = "The password provided is too weak";
-      } else if (e.code == 'email-already-in-use') {
-        errorMessage = "The account already exists for that email";
-      }
-    } catch (e) {
-      print(e);
-    }
   }
 
   Widget seperateServicesSignInColumn() {
@@ -268,27 +248,7 @@ class _SignUpPage extends State<SignUpPage> {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: <Widget>[
                 topText(),
-                signUpRow(Icon(Icons.email), "Email", false, emailController,
-                    emailValidator(emailController.text.toString())),
-                signUpRow(
-                    Icon(Icons.account_circle_outlined),
-                    "Username",
-                    false,
-                    usernameController,
-                    usernameValidator(usernameController.text.toString())),
-                signUpRow(
-                    Icon(Icons.vpn_key),
-                    "Password",
-                    true,
-                    passwordController,
-                    passwordValidator(passwordController.text.toString())),
-                signUpRow(
-                    Icon(Icons.vpn_lock),
-                    "Password Confirmation",
-                    true,
-                    passwordConfirmationController,
-                    passwordValidator(
-                        passwordConfirmationController.text.toString())),
+                signUpForm(),
                 signUpButton(),
                 orContainer(50),
                 seperateServicesSignInColumn(),
@@ -300,5 +260,119 @@ class _SignUpPage extends State<SignUpPage> {
         ),
       ),
     );
+  }
+}
+
+class _SignUpInfo {
+  GlobalKey<FormState> registerFormKey;
+  TextEditingController usernameController;
+  TextEditingController passwordConfirmationController;
+  TextEditingController passwordController;
+
+  String errorMessage;
+  String usernameErrorMessage;
+
+  _SignUpInfo({
+    required this.registerFormKey,
+    required this.usernameController,
+    required this.passwordConfirmationController,
+    required this.passwordController,
+    required this.errorMessage,
+    required this.usernameErrorMessage,
+  });
+
+  Future signUp() async {
+    //Figure out how to do password stuff
+    if (passwordConfirmationController.text.toString() !=
+        passwordController.text.toString()) {
+      errorMessage = "Passwords do not match";
+      return;
+    }
+
+    String username = usernameController.text.toString();
+
+    bool validUsername = await usernameIsInDatabase(username);
+    if (!validUsername && !_usernameCheck(username)) {}
+
+    if (registerFormKey.currentState != null &&
+        !registerFormKey.currentState!.validate()) {
+      return;
+    }
+
+    try {
+      /*UserCredential userCredential =
+          await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: emailController.text,
+        password: passwordController.text,
+      );*/ //Implement then and firestore research
+    } on FirebaseAuthException catch (e) {
+      //During submission, might want to adjust to change validators if possible
+      errorMessage = e.code;
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  //Check if email is valid
+  String? emailValidator(String value) {
+    String pattern =
+        r'^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$';
+    RegExp regex = new RegExp(pattern);
+    if (!regex.hasMatch(value)) {
+      return "Email is not valid";
+    } else {
+      return null;
+    }
+  }
+
+  bool _usernameCheck(String username) {
+    if (username.length < 4) {
+      usernameErrorMessage = "too short";
+      return false;
+    } else if (username.length > 20) {
+      usernameErrorMessage = "too long";
+      return false;
+    // ignore: dead_code
+    } else if (/*username contains a slur on slur list*/ false) {
+      usernameErrorMessage = "bad username";
+      return false;
+    }
+    return true;
+  }
+
+  Future<bool> usernameIsInDatabase(String username) async {
+    final result = await FirebaseFirestore.instance
+        .collection('users')
+        .where('username', isEqualTo: username)
+        .get();
+
+    return result.docs.isEmpty;
+  }
+
+  String? usernameValidator(String? value) {
+    if (usernameErrorMessage == "user exists") {
+      return "This username already exists, select a different one.";
+    } else if (usernameErrorMessage == "too short") {
+      return "The username is too short";
+    } else if (usernameErrorMessage == "too long") {
+      return "The username is too long";
+    } else if (usernameErrorMessage == "bad username") {
+      return "Invalud username";
+    } else {
+      return null;
+    }
+  }
+
+  //Check if password fits requirements
+  String? passwordValidator(String value) {
+    if (errorMessage == 'weak-password') {
+      return "The password provided is too weak";
+    } else if (errorMessage == 'email-already-in-use') {
+      return "The account already exists for that email";
+    } else if (errorMessage == "Passwords do not match") {
+      return "Password does not match";
+    } else {
+      return null;
+    }
   }
 }
