@@ -1,6 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:public_review/AppOverview/HomePage.dart';
+import 'package:public_review/Authentication/CustomAuth.dart';
+import 'package:public_review/Misc/OpenFile.dart';
+import 'package:public_review/User/AddUserInfo.dart';
 
 class SignUpPage extends StatefulWidget {
   @override
@@ -9,15 +13,13 @@ class SignUpPage extends StatefulWidget {
 
 class _SignUpPage extends State<SignUpPage> {
   late _SignUpInfo signUpInfo;
+  late SlurList _slurList;
 
   final GlobalKey<FormState> _registerFormKey = GlobalKey<FormState>();
   late TextEditingController emailController;
   late TextEditingController usernameController;
   late TextEditingController passwordController;
   late TextEditingController passwordConfirmationController;
-
-  String errorMessage = "";
-  String usernameErrorMessage = "";
 
   @override
   initState() {
@@ -26,13 +28,16 @@ class _SignUpPage extends State<SignUpPage> {
     passwordController = new TextEditingController();
     passwordConfirmationController = new TextEditingController();
 
+    _slurList = new SlurList();
+    _slurList.initializeFile();
+
     signUpInfo = new _SignUpInfo(
-      registerFormKey: _registerFormKey,
-      usernameController: usernameController,
-      passwordConfirmationController: passwordConfirmationController,
-      passwordController: passwordController,
-      errorMessage: errorMessage,
-      usernameErrorMessage: usernameErrorMessage);
+        slurList: _slurList,
+        registerFormKey: _registerFormKey,
+        emailController: emailController,
+        usernameController: usernameController,
+        passwordConfirmationController: passwordConfirmationController,
+        passwordController: passwordController);
     super.initState();
   }
 
@@ -51,10 +56,8 @@ class _SignUpPage extends State<SignUpPage> {
   Widget topText() {
     return Text(
       "Public Review",
-      style: TextStyle(
-        fontSize: 55.0,
-        color: Colors.black, /*fontFamily: "KScript"*/
-      ),
+      style:
+          TextStyle(fontSize: 55.0, color: Colors.black, fontFamily: "Dosis"),
     );
   }
 
@@ -108,13 +111,12 @@ class _SignUpPage extends State<SignUpPage> {
 
   Widget signUpButton() {
     return Container(
-      padding: EdgeInsets.only(left: 22),
       child: ElevatedButton(
-        onPressed: () => signUpInfo,
+        onPressed: () => signUpInfo.signUp(context),
         child: Text("Sign up", style: TextStyle(color: Colors.black)),
         style: ButtonStyle(
             backgroundColor: MaterialStateProperty.all<Color>(Colors.blue),
-            minimumSize: MaterialStateProperty.all<Size>(Size(335, 50))),
+            minimumSize: MaterialStateProperty.all<Size>(Size(300, 50))),
       ),
     );
   }
@@ -176,7 +178,6 @@ class _SignUpPage extends State<SignUpPage> {
     return GestureDetector(
       onTap: null,
       child: Container(
-        //padding: EdgeInsets.all(5),
         width: 270.0,
         height: 65.0,
         decoration: BoxDecoration(
@@ -265,34 +266,39 @@ class _SignUpPage extends State<SignUpPage> {
 
 class _SignUpInfo {
   GlobalKey<FormState> registerFormKey;
+  TextEditingController emailController;
   TextEditingController usernameController;
   TextEditingController passwordConfirmationController;
   TextEditingController passwordController;
 
-  String errorMessage;
-  String usernameErrorMessage;
+  String errorMessage = "";
+  String usernameErrorMessage = "";
+
+  SlurList slurList;
 
   _SignUpInfo({
+    required this.slurList,
     required this.registerFormKey,
+    required this.emailController,
     required this.usernameController,
     required this.passwordConfirmationController,
     required this.passwordController,
-    required this.errorMessage,
-    required this.usernameErrorMessage,
   });
 
-  Future signUp() async {
+  Future signUp(BuildContext context) async {
+    errorMessage = "";
     //Figure out how to do password stuff
+    print(passwordConfirmationController.text.toString());
+    print(passwordController.text.toString());
     if (passwordConfirmationController.text.toString() !=
         passwordController.text.toString()) {
       errorMessage = "Passwords do not match";
-      return;
     }
 
     String username = usernameController.text.toString();
 
-    bool validUsername = await usernameIsInDatabase(username);
-    if (!validUsername && !_usernameCheck(username)) {}
+    await usernameIsInDatabase(username);
+    _usernameCheck(username);
 
     if (registerFormKey.currentState != null &&
         !registerFormKey.currentState!.validate()) {
@@ -300,12 +306,33 @@ class _SignUpInfo {
     }
 
     try {
-      /*UserCredential userCredential =
+      String email = emailController.text.toString();
+      String password = passwordController.text.toString();
+
+      UserCredential userCredential =
           await FirebaseAuth.instance.createUserWithEmailAndPassword(
-        email: emailController.text,
-        password: passwordController.text,
-      );*/ //Implement then and firestore research
+        email: email,
+        password: password,
+      );
+
+      //Adds user to firestore db
+      new AddUserInfo(email: email, username: username).addNewUser();
+
+      if (CustomAuth.signIn(email, password) == "Success") {
+        print("Signed in");
+        User user = FirebaseAuth.instance.currentUser!;
+        print("user: " + user.toString());
+
+        if (!user.emailVerified) {
+          await user.sendEmailVerification();
+        }
+
+        print("push new screen");
+        Navigator.pushReplacement(
+            context, new MaterialPageRoute(builder: (context) => HomePage()));
+      }
     } on FirebaseAuthException catch (e) {
+      print(e);
       //During submission, might want to adjust to change validators if possible
       errorMessage = e.code;
     } catch (e) {
@@ -325,28 +352,29 @@ class _SignUpInfo {
     }
   }
 
-  bool _usernameCheck(String username) {
+  void _usernameCheck(String username) {
     if (username.length < 4) {
       usernameErrorMessage = "too short";
-      return false;
+      return;
     } else if (username.length > 20) {
       usernameErrorMessage = "too long";
-      return false;
-    // ignore: dead_code
-    } else if (/*username contains a slur on slur list*/ false) {
+      return;
+    } else if (slurList.isSlurInString(username)) {
       usernameErrorMessage = "bad username";
-      return false;
+      return;
     }
-    return true;
+    usernameErrorMessage = "";
+    print(usernameErrorMessage);
   }
 
-  Future<bool> usernameIsInDatabase(String username) async {
+  Future<void> usernameIsInDatabase(String username) async {
+    /*
     final result = await FirebaseFirestore.instance
         .collection('users')
         .where('username', isEqualTo: username)
         .get();
 
-    return result.docs.isEmpty;
+    return result.docs.isEmpty;*/
   }
 
   String? usernameValidator(String? value) {
@@ -357,7 +385,7 @@ class _SignUpInfo {
     } else if (usernameErrorMessage == "too long") {
       return "The username is too long";
     } else if (usernameErrorMessage == "bad username") {
-      return "Invalud username";
+      return "Invalid username";
     } else {
       return null;
     }
@@ -374,5 +402,25 @@ class _SignUpInfo {
     } else {
       return null;
     }
+  }
+}
+
+//Add class to open files
+class SlurList {
+  OpenFile _openFile = new OpenFile();
+  late List<String> _slurs;
+
+  void initializeFile() async {
+    _slurs = await _openFile.getDataFromFile("assets/information/SlurList.txt");
+  }
+
+  //Goes through the whole list and checks if a slur in the slur list is contained.
+  bool isSlurInString(String string) {
+    for (int i = 0; i < _slurs.length - 1; i++) {
+      if (string.trim().toLowerCase().contains(_slurs[i].trim())) {
+        return true;
+      }
+    }
+    return false;
   }
 }

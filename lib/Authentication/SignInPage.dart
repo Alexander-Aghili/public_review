@@ -2,6 +2,8 @@ import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:public_review/AppOverview/HomePage.dart';
+import 'package:public_review/Authentication/CustomAuth.dart';
 import 'package:public_review/Authentication/SignUpPage.dart';
 
 class SignInPage extends StatefulWidget {
@@ -10,7 +12,7 @@ class SignInPage extends StatefulWidget {
 }
 
 class _SignInPage extends State<SignInPage> {
-  final usernameController = TextEditingController();
+  final emailController = TextEditingController();
   final passwordController = TextEditingController();
 
   bool isAppleDevice() {
@@ -20,17 +22,14 @@ class _SignInPage extends State<SignInPage> {
   Widget topText() {
     return Text(
       "Public Review",
-      style: TextStyle(
-        fontSize: 55.0,
-        color: Colors.black, /*fontFamily: "KScript"*/
-      ),
+      style:
+          TextStyle(fontSize: 55.0, color: Colors.black, fontFamily: "Dosis"),
     );
   }
 
   Widget signInRow(Icon icon, String inputText, bool secureText,
       TextEditingController controller) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: <Widget>[
         Container(
@@ -60,27 +59,27 @@ class _SignInPage extends State<SignInPage> {
 
   Widget signInButton() {
     return Container(
-      padding: EdgeInsets.only(left: 22),
       child: ElevatedButton(
         onPressed: () => signIn(),
         child: Text("Sign in", style: TextStyle(color: Colors.black)),
         style: ButtonStyle(
             backgroundColor: MaterialStateProperty.all<Color>(Colors.blue),
-            minimumSize: MaterialStateProperty.all<Size>(Size(335, 50))),
+            minimumSize: MaterialStateProperty.all<Size>(Size(300, 50))),
       ),
     );
   }
 
   Future signIn() async {
     try {
-      UserCredential userCredential = await FirebaseAuth.instance
-          .signInWithEmailAndPassword(
-              email: usernameController.text.trim(),
-              password: passwordController.text.trim());
+      CustomAuth.signIn(
+          emailController.text.toString(), passwordController.text.toString());
+
+      Navigator.pushReplacement(
+          context, new MaterialPageRoute(builder: (context) => new HomePage()));
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user-not-found') {
-        print("no user: " + usernameController.text);
-        usernameController.text = "No Email Found:";
+        print("no user: " + emailController.text);
+        emailController.text = "No Email Found:";
         passwordController.clear();
       } else if (e.code == 'wrong-password') {
         print("Bad Password: " + passwordController.text);
@@ -204,33 +203,32 @@ class _SignInPage extends State<SignInPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: BoxDecoration(
-          color: Theme.of(context).accentColor,
-        ),
-        alignment: Alignment.center,
-        child: ListView(
-          physics: const ScrollPhysics(),
-          shrinkWrap: true,
-          children: [
-            Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: <Widget>[
-                topText(),
-                signInRow(Icon(Icons.account_circle), "Username/Email", false,
-                    usernameController),
-                signInRow(Icon(Icons.vpn_key), "Password", true,
-                    passwordController),
-                signInButton(),
-                orContainer(50),
-                seperateServicesSignInColumn(),
-                signUpButton(context),
-                skip(),
-              ],
-            ),
-          ],
-        )
-      ),
+          decoration: BoxDecoration(
+            color: Theme.of(context).accentColor,
+          ),
+          alignment: Alignment.center,
+          child: ListView(
+            physics: const ScrollPhysics(),
+            shrinkWrap: true,
+            children: [
+              Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: <Widget>[
+                  topText(),
+                  signInRow(Icon(Icons.account_circle), "Email", false,
+                      emailController),
+                  signInRow(Icon(Icons.vpn_key), "Password", true,
+                      passwordController),
+                  signInButton(),
+                  orContainer(50),
+                  seperateServicesSignInColumn(),
+                  signUpButton(context),
+                  skip(),
+                ],
+              ),
+            ],
+          )),
     );
   }
 }

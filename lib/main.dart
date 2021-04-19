@@ -6,6 +6,10 @@ import "Authentication/AuthPage.dart";
 
 //Main Issues:
 //Figure out how to effectivly use the passwords in the form validator.
+//Firestore data to user and understanding user info
+//Reference Authentication/SignUpPage.dart/_SignUpInfo/SignUp
+
+//Later ToDo:
 //Implementing user storage, add another section that expands upon base info, including:
 //First Name, Last Name, Display Name, Profile Picture, Political Party, ask for Location Service
 

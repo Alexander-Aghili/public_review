@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:public_review/AppOverview/HomePage.dart';
 import 'package:public_review/Authentication/SignInPage.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -22,7 +23,7 @@ class _AuthPage extends State<AuthPage> {
     authChecks();
 
     if (auth.currentUser != null) {
-      return Scaffold();
+      return HomePage();
     } else {
       return SignInPage();
     }
