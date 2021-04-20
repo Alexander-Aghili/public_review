@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:public_review/AppOverview/HomePage.dart';
+import 'package:public_review/Authentication/CustomAuth.dart';
 import 'package:public_review/Authentication/SignInPage.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+
+import 'VerifyEmailPage.dart';
 
 class AuthPage extends StatefulWidget {
   @override
@@ -11,26 +14,23 @@ class AuthPage extends StatefulWidget {
 class _AuthPage extends State<AuthPage> {
   FirebaseAuth auth = FirebaseAuth.instance;
 
-  authChecks() {
+  Widget authChecks() {
     User? user = auth.currentUser;
-
-    if (user != null && !user.emailVerified) {
-      user.sendEmailVerification();
+    if (user != null) {
+      user.reload();
     }
-  }
 
-  Widget pageForUserState() {
-    authChecks();
-
-    if (auth.currentUser != null) {
-      return HomePage();
-    } else {
+    if (user == null) {
       return SignInPage();
+    } else if (!user.emailVerified) {
+      return VerifyEmailPage(email: user.email.toString());
+    } else {
+      return HomePage();
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return pageForUserState();
+    return authChecks();
   }
 }

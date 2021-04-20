@@ -2,6 +2,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:public_review/Authentication/VerifyEmailPage.dart';
 import "Authentication/AuthPage.dart";
 
 //Main Issues:

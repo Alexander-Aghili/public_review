@@ -6,14 +6,38 @@ import 'package:public_review/AppOverview/HomePage.dart';
 import 'package:public_review/Authentication/CustomAuth.dart';
 import 'package:public_review/Authentication/SignUpPage.dart';
 
+import 'VerifyEmailPage.dart';
+
+//To Implement:
+//Forget Password
+//Help
+//Third Party
+
 class SignInPage extends StatefulWidget {
   @override
   State<StatefulWidget> createState() => _SignInPage();
 }
 
 class _SignInPage extends State<SignInPage> {
-  final emailController = TextEditingController();
-  final passwordController = TextEditingController();
+  final GlobalKey<FormState> _registerFormKey = GlobalKey<FormState>();
+  late TextEditingController emailController;
+  late TextEditingController passwordController;
+
+  String emailMessage = "";
+  String passwordMessage = "";
+
+  @override
+  initState() {
+    emailController = new TextEditingController();
+    passwordController = new TextEditingController();
+    super.initState();
+  }
+
+  void dispose() {
+    emailController.dispose();
+    passwordController.dispose();
+    super.dispose();
+  }
 
   bool isAppleDevice() {
     return Theme.of(context).platform == TargetPlatform.iOS;
@@ -27,8 +51,38 @@ class _SignInPage extends State<SignInPage> {
     );
   }
 
+  String? emailValidator(String? value) {
+    if (emailMessage == "no user") {
+      return "No email can be found";
+    } else if (emailMessage == "bad input") {
+      return "Invalid email input";
+    }
+    return null;
+  }
+
+  String? passwordValidator(String? value) {
+    if (passwordMessage == "incorrect input") {
+      return "Incorrect Password";
+    }
+    return null;
+  }
+
+  Widget signInForm() {
+    return Form(
+      key: _registerFormKey,
+      child: Column(
+        children: <Widget>[
+          signInRow(Icon(Icons.account_circle), "Email", false, emailController,
+              emailValidator),
+          signInRow(Icon(Icons.vpn_key), "Password", true, passwordController,
+              passwordValidator),
+        ],
+      ),
+    );
+  }
+
   Widget signInRow(Icon icon, String inputText, bool secureText,
-      TextEditingController controller) {
+      TextEditingController controller, Function validator) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: <Widget>[
@@ -44,13 +98,14 @@ class _SignInPage extends State<SignInPage> {
           height: 75,
           width: 350,
           alignment: Alignment.center,
-          child: TextField(
+          child: TextFormField(
             obscureText: secureText,
             controller: controller,
             decoration: InputDecoration(
               border: OutlineInputBorder(),
               labelText: inputText,
             ),
+            validator: (value) => validator(value),
           ),
         ),
       ],
@@ -69,21 +124,44 @@ class _SignInPage extends State<SignInPage> {
     );
   }
 
+  //Login wont work until reload, CustomAuth Sign in doesn't return Success but instance of Future String
   Future signIn() async {
-    try {
-      CustomAuth.signIn(
-          emailController.text.toString(), passwordController.text.toString());
+    emailMessage = "";
+    passwordMessage = "";
 
-      Navigator.pushReplacement(
-          context, new MaterialPageRoute(builder: (context) => new HomePage()));
+    try {
+      UserCredential userCredential = await FirebaseAuth.instance
+          .signInWithEmailAndPassword(
+              email: emailController.text.toString(),
+              password: passwordController.text.toString());
+
+      User user = FirebaseAuth.instance.currentUser!;
+      user.reload();
+
+      if (user.emailVerified) {
+        Navigator.pushReplacement(context,
+            new MaterialPageRoute(builder: (context) => new HomePage()));
+      } else {
+        Navigator.pushReplacement(
+            context,
+            new MaterialPageRoute(
+                builder: (context) =>
+                    VerifyEmailPage(email: emailController.text.toString())));
+      }
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user-not-found') {
-        print("no user: " + emailController.text);
-        emailController.text = "No Email Found:";
+        emailMessage = "no user";
+        passwordController.clear();
+      } else if (e.code == "invalid-email") {
+        emailMessage = "bad input";
         passwordController.clear();
       } else if (e.code == 'wrong-password') {
-        print("Bad Password: " + passwordController.text);
+        passwordMessage = "incorrect input";
         passwordController.clear();
+      }
+      if (_registerFormKey.currentState != null &&
+          !_registerFormKey.currentState!.validate()) {
+        return;
       }
     } catch (e) {}
   }
@@ -159,7 +237,6 @@ class _SignInPage extends State<SignInPage> {
     return GestureDetector(
       onTap: null,
       child: Container(
-        //padding: EdgeInsets.all(5),
         width: 270.0,
         height: 65.0,
         decoration: BoxDecoration(
@@ -180,7 +257,7 @@ class _SignInPage extends State<SignInPage> {
     );
   }
 
-  Widget skip() {
+  Widget help() {
     return GestureDetector(
       onTap: null,
       child: Container(
@@ -189,7 +266,7 @@ class _SignInPage extends State<SignInPage> {
         width: 100,
         height: 40,
         child: Text(
-          "Skip",
+          "Help",
           style: TextStyle(
               color: Colors.amber,
               decoration: TextDecoration.underline,
@@ -216,15 +293,12 @@ class _SignInPage extends State<SignInPage> {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: <Widget>[
                   topText(),
-                  signInRow(Icon(Icons.account_circle), "Email", false,
-                      emailController),
-                  signInRow(Icon(Icons.vpn_key), "Password", true,
-                      passwordController),
+                  signInForm(),
                   signInButton(),
                   orContainer(50),
                   seperateServicesSignInColumn(),
                   signUpButton(context),
-                  skip(),
+                  help(),
                 ],
               ),
             ],

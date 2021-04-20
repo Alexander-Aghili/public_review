@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:public_review/AppOverview/HomePage.dart';
 import 'package:public_review/Authentication/CustomAuth.dart';
+import 'package:public_review/Authentication/VerifyEmailPage.dart';
 import 'package:public_review/Misc/OpenFile.dart';
 import 'package:public_review/User/AddUserInfo.dart';
 
@@ -198,7 +199,7 @@ class _SignUpPage extends State<SignUpPage> {
     );
   }
 
-  Widget skip() {
+  Widget help() {
     return GestureDetector(
       onTap: null,
       child: Container(
@@ -207,7 +208,7 @@ class _SignUpPage extends State<SignUpPage> {
         width: 100,
         height: 40,
         child: Text(
-          "Skip",
+          "Help",
           style: TextStyle(
               color: Colors.amber,
               decoration: TextDecoration.underline,
@@ -241,7 +242,6 @@ class _SignUpPage extends State<SignUpPage> {
         ),
         alignment: Alignment.center,
         child: ListView(
-          shrinkWrap: true,
           physics: const ScrollPhysics(),
           children: <Widget>[
             Column(
@@ -254,7 +254,7 @@ class _SignUpPage extends State<SignUpPage> {
                 orContainer(50),
                 seperateServicesSignInColumn(),
                 signInButton(context),
-                skip(),
+                help(),
               ],
             ),
           ],
@@ -288,8 +288,6 @@ class _SignUpInfo {
   Future signUp(BuildContext context) async {
     errorMessage = "";
     //Figure out how to do password stuff
-    print(passwordConfirmationController.text.toString());
-    print(passwordController.text.toString());
     if (passwordConfirmationController.text.toString() !=
         passwordController.text.toString()) {
       errorMessage = "Passwords do not match";
@@ -316,21 +314,13 @@ class _SignUpInfo {
       );
 
       //Adds user to firestore db
-      new AddUserInfo(email: email, username: username).addNewUser();
+      //new AddUserInfo(email: email, username: username).addNewUser();
+        
+      Navigator.pushReplacement(
+        context,
+        new MaterialPageRoute(
+          builder: (context) => VerifyEmailPage(email: email)));
 
-      if (CustomAuth.signIn(email, password) == "Success") {
-        print("Signed in");
-        User user = FirebaseAuth.instance.currentUser!;
-        print("user: " + user.toString());
-
-        if (!user.emailVerified) {
-          await user.sendEmailVerification();
-        }
-
-        print("push new screen");
-        Navigator.pushReplacement(
-            context, new MaterialPageRoute(builder: (context) => HomePage()));
-      }
     } on FirebaseAuthException catch (e) {
       print(e);
       //During submission, might want to adjust to change validators if possible
@@ -368,13 +358,14 @@ class _SignUpInfo {
   }
 
   Future<void> usernameIsInDatabase(String username) async {
-    /*
     final result = await FirebaseFirestore.instance
         .collection('users')
         .where('username', isEqualTo: username)
         .get();
 
-    return result.docs.isEmpty;*/
+    if (result.docs.isNotEmpty) {
+      errorMessage = "user exists";
+    }
   }
 
   String? usernameValidator(String? value) {
