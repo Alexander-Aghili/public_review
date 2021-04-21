@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:public_review/AppOverview/HomePage.dart';
-import 'package:public_review/Authentication/CustomAuth.dart';
 import 'package:public_review/Authentication/SignInPage.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 

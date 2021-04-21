@@ -3,7 +3,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:public_review/AppOverview/HomePage.dart';
-import 'package:public_review/Authentication/CustomAuth.dart';
 import 'package:public_review/Authentication/SignUpPage.dart';
 
 import 'VerifyEmailPage.dart';

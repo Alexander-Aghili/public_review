@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:public_review/AppOverview/HomePage.dart';
+import 'package:public_review/User/CompleteSignUpOfCustomUser.dart';
 
 class VerifyEmailPage extends StatefulWidget {
   late String email;
@@ -74,18 +75,13 @@ class _VerifyEmailPage extends State<VerifyEmailPage> {
   void isEmailVerified() async {
     user = FirebaseAuth.instance.currentUser!;
     user.reload();
-    
+
     if (!user.emailVerified) {
-      setState(() {
-        _verifyText = Text(
-            "Email not verified. Check and verify your email. Then continue.");
-      });
-      await user.sendEmailVerification();
       return;
     }
-
+  
     Navigator.pushReplacement(
-        context, new MaterialPageRoute(builder: (context) => HomePage()));
+        context, new MaterialPageRoute(builder: (context) => CompleteSignUpOfCustomUser()));
   }
 
   Widget resendVerificationButton() {

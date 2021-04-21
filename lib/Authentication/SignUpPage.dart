@@ -2,10 +2,12 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:public_review/AppOverview/HomePage.dart';
-import 'package:public_review/Authentication/CustomAuth.dart';
 import 'package:public_review/Authentication/VerifyEmailPage.dart';
 import 'package:public_review/Misc/OpenFile.dart';
 import 'package:public_review/User/AddUserInfo.dart';
+import 'package:public_review/Authentication/GoogleSignIn.dart';
+
+import 'SignInWithThirdParty.dart';
 
 class SignUpPage extends StatefulWidget {
   @override
@@ -122,62 +124,54 @@ class _SignUpPage extends State<SignUpPage> {
     );
   }
 
-  Widget seperateServicesSignInColumn() {
-    bool isApple = isAppleDevice();
-    double height = 60;
-
-    if (isApple) {
-      return Column(
-        children: <Widget>[
-          SizedBox(
-            height: height,
-            child: signInWithSeperateServiceButton(
-                AssetImage("assets/images/google_signin_button.png")),
-          ),
-          SizedBox(
-            height: height,
-            child: signInWithSeperateServiceButton(
-                AssetImage("assets/images/facebook_signin_button.png")),
-          ),
-          SizedBox(
-            height: height,
-            child: signInWithSeperateServiceButton(
-                AssetImage("assets/images/twitter_signin_button.png")),
-          ),
-          SizedBox(
-            height: height,
-            child: signInWithSeperateServiceButton(
-                AssetImage("assets/images/apple_signin_button.png")),
-          ),
-        ],
-      );
-    } else {
-      return Column(
-        children: <Widget>[
-          SizedBox(
-            height: height,
-            child: signInWithSeperateServiceButton(
-                AssetImage("assets/images/google_signin_button.png")),
-          ),
-          SizedBox(
-            height: height,
-            child: signInWithSeperateServiceButton(
-                AssetImage("assets/images/facebook_signin_button.png")),
-          ),
-          SizedBox(
-            height: height,
-            child: signInWithSeperateServiceButton(
-                AssetImage("assets/images/twitter_signin_button.png")),
-          ),
-        ],
-      );
+  Widget appleSignInButton(double height) {
+    if (isAppleDevice()) {
+      return (SizedBox(
+        height: height,
+        child: signInWithSeperateServiceButton(
+          image: AssetImage("assets/images/apple_signin_button.png"),
+          function: SignInWithThirdParty().doNothing,
+        ),
+      ));
     }
+    return (SizedBox(
+      height: height,
+    ));
+  }
+
+  Widget seperateServicesSignInColumn() {
+    double height = 60;
+    return Column(
+      children: <Widget>[
+        SizedBox(
+          height: height,
+          child: signInWithSeperateServiceButton(
+              image: AssetImage("assets/images/google_signin_button.png"),
+              function: SignInWithThirdParty().signInWithGoogle),
+        ),
+        SizedBox(
+          height: height,
+          child: signInWithSeperateServiceButton(
+            image: AssetImage("assets/images/facebook_signin_button.png"),
+            function: SignInWithThirdParty().doNothing,
+          ),
+        ),
+        SizedBox(
+          height: height,
+          child: signInWithSeperateServiceButton(
+            image: AssetImage("assets/images/twitter_signin_button.png"),
+            function: SignInWithThirdParty().doNothing,
+          ),
+        ),
+        appleSignInButton(height),
+      ],
+    );
   }
 
   Widget signInWithSeperateServiceButton(
-      /*VoidCallback action,*/ AssetImage image) {
+      {required Function function, required AssetImage image}) {
     return GestureDetector(
-      onTap: null,
+      onTap: () => function(),
       child: Container(
         width: 270.0,
         height: 65.0,
@@ -313,14 +307,16 @@ class _SignUpInfo {
         password: password,
       );
 
-      //Adds user to firestore db
-      //new AddUserInfo(email: email, username: username).addNewUser();
-        
-      Navigator.pushReplacement(
-        context,
-        new MaterialPageRoute(
-          builder: (context) => VerifyEmailPage(email: email)));
+      User user = userCredential.user!;
+      await user.sendEmailVerification();
 
+      //Adds user to firestore db
+      new AddUserInfo().addNewCustomUser(user: user, username: username);
+
+      Navigator.pushReplacement(
+          context,
+          new MaterialPageRoute(
+              builder: (context) => VerifyEmailPage(email: email)));
     } on FirebaseAuthException catch (e) {
       print(e);
       //During submission, might want to adjust to change validators if possible

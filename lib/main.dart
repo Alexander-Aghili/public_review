@@ -3,10 +3,11 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:public_review/Authentication/VerifyEmailPage.dart';
+import 'package:public_review/User/CompleteSignUpOfCustomUser.dart';
 import "Authentication/AuthPage.dart";
 
 //Main Issues:
-//Figure out how to effectivly use the passwords in the form validator.
+//Issues with data for new user and interacting with firestore when data is not completed when signed in.
 //Firestore data to user and understanding user info
 //Reference Authentication/SignUpPage.dart/_SignUpInfo/SignUp
 

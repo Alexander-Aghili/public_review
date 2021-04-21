@@ -1,17 +1,17 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class AddUserInfo {
-  String email;
-  String username;
-
-  AddUserInfo({required this.email, required this.username});
-
   CollectionReference users = FirebaseFirestore.instance.collection("users");
 
-  Future<void> addNewUser() {
+  Future<DocumentReference> addNewCustomUser({required User user, required String username}) async {
     return users.add({
-      'email': email,
+      'email': user.email,
       'username': username,
+      'id': user.uid,
+      'profilepic': user.photoURL,
+      'timestamp': user.metadata.creationTime,
+      'completedUser': false,
     });
   }
 }
