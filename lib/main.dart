@@ -43,7 +43,7 @@ class MyApp extends StatelessWidget {
         accentColor: const Color(0xFFC8E6C9),
         cardColor: Colors.white70,
       ),
-      home: AuthPage(),
+      home: CompleteSignUpOfCustomUser(),
       debugShowCheckedModeBanner: false,
     );
   }
